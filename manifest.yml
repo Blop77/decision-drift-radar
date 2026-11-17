@@ -1,0 +1,187 @@
+modules:
+  jira:globalPage:
+    - key: decision-drift-radar-global-page
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: Decision Drift Radar
+      icon: resource:icons;radar.svg
+  jira:projectPage:
+    - key: decision-drift-radar-project-page
+      resource: main
+      resolver:
+        function: resolver
+      render: native
+      title: Decision Drift Radar
+      icon: resource:icons;radar.svg
+  jira:issuePanel:
+    - key: decision-drift-radar-issue-panel
+      resource: issue-panel
+      resolver:
+        function: resolver
+      render: native
+      title: Decision Drift Radar
+      icon: resource:icons;radar.svg
+  rovo:agent:
+    - key: decision-drift-radar-agent
+      name: Decision Drift Radar
+      description: Finds decisions recorded in Confluence and Jira that have not reached the Jira issues they affect, with quoted evidence and reasons.
+      prompt: resource:agent-prompts;agent-prompt.txt
+      conversationStarters:
+        - Which decisions may affect this issue?
+        - Scan this project for decisions that have not reached its issues
+        - Which issues still describe a plan that a decision replaced?
+        - Draft a note for this issue about the decision it is missing
+      actions:
+        - find-project-decisions
+        - find-issue-decisions
+        - find-more-decisions-with-ai
+        - prepare-decision-note
+  action:
+    - key: find-project-decisions
+      name: Find decisions for a project
+      function: findProjectDecisions
+      actionVerb: GET
+      description: Scans a Jira project's recent issues, comments and related Confluence pages. Returns decisions, open questions and proposals with the exact quote, the source, and the issues each may affect with reasons.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: true
+          description: The Jira project key, for example MC. Use the project the user is viewing if they do not name one.
+    - key: find-issue-decisions
+      name: Find decisions for an issue
+      function: findIssueDecisions
+      actionVerb: GET
+      description: Finds decisions, open questions and proposals that point at one Jira issue, from its description, its comments and related Confluence pages. Returns the exact quote, the source and the reasons.
+      inputs:
+        issueKey:
+          title: Issue key
+          type: string
+          required: true
+          description: The Jira issue key, for example MC-9. Use the issue the user is viewing if they do not name one.
+    - key: find-more-decisions-with-ai
+      name: Find more decisions with AI
+      function: findMoreDecisionsWithAi
+      actionVerb: CREATE
+      description: Starts the app's background AI pass on a Jira project to find indirectly phrased decisions the rules missed. Findings, with quotes matched word for word, appear in the next scan. Use only when the user asks for more findings. Limited per day.
+      inputs:
+        projectKey:
+          title: Project key
+          type: string
+          required: true
+          description: The Jira project key, for example MC. Use the project the user is viewing if they do not name one.
+    - key: prepare-decision-note
+      name: Prepare a decision note
+      function: prepareDecisionNote
+      actionVerb: CREATE
+      description: Saves a private draft for an affected Jira issue. Send the user to its Decision Drift Radar panel to review and post the exact comment.
+      inputs:
+        issueKey:
+          title: Issue key
+          type: string
+          required: true
+          description: The affected Jira issue, for example MC-9.
+        findingId:
+          title: Finding ID
+          type: string
+          required: true
+          description: The findingId of the decision, from find-issue-decisions or find-project-decisions.
+        note:
+          title: Note
+          type: string
+          required: false
+          description: Two or three plain sentences based only on the finding - what was decided, what in the issue looks out of date, what to update. The app adds the quote and source link below it. Leave empty for the app's standard note.
+  trigger:
+    - key: drift-watch
+      function: watchIssueUpdates
+      events:
+        - avi:jira:created:issue
+        - avi:jira:updated:issue
+      filter:
+        ignoreSelf: true
+  scheduledTrigger:
+    # Re-checks recently updated issues in projects with watched decisions, for events Jira did not deliver.
+    - key: drift-catch-up
+      function: catchUpDrift
+      interval: fiveMinute
+  consumer:
+    - key: ai-pass-consumer
+      queue: ai-pass
+      function: runAiJob
+  llm:
+    - key: decision-drift-radar-llm
+      model:
+        - claude
+  function:
+    - key: resolver
+      handler: index.handler
+    - key: findProjectDecisions
+      handler: index.findProjectDecisions
+    - key: findIssueDecisions
+      handler: index.findIssueDecisions
+    - key: findMoreDecisionsWithAi
+      handler: index.findMoreDecisionsWithAi
+    - key: prepareDecisionNote
+      handler: index.prepareDecisionNote
+    - key: watchIssueUpdates
+      handler: index.watchIssueUpdates
+    - key: catchUpDrift
+      handler: index.catchUpDrift
+      timeoutSeconds: 120
+    - key: runAiJob
+      handler: index.runAiJob
+      timeoutSeconds: 900
+resources:
+  - key: main
+    path: src/frontend/index.jsx
+  - key: issue-panel
+    path: src/frontend/issue-panel.jsx
+  - key: agent-prompts
+    path: src/rovo
+  - key: icons
+    path: static/icons
+app:
+  runtime:
+    name: nodejs24.x
+    memoryMB: 256
+    architecture: arm64
+  id: ari:cloud:ecosystem::app/68a157f1-8d36-4681-ad80-656a45181b6a
+  storage:
+    entities:
+      - name: note-reservation
+        attributes:
+          attemptId:
+            type: string
+          startedAt:
+            type: string
+          confirmedIn:
+            type: string
+      # One record per project: drift history and first-seen times, updated with a version check.
+      - name: radar-state
+        attributes:
+          projectKey:
+            type: string
+          version:
+            type: integer
+          radar:
+            type: any
+          updatedAt:
+            type: string
+  compatibility:
+    jira:
+      required: true
+    confluence:
+      required: false
+permissions:
+  scopes:
+    - search:confluence
+    - read:jira-work
+    - write:jira-work
+    - read:confluence-content.all
+    - storage:app
+    - read:graph:project:jira
+    - read:graph:team:atlassian
+    - read:graph:space:confluence
+    - read:graph:page:confluence

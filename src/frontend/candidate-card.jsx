@@ -1,0 +1,448 @@
+import React, { useState } from 'react';
+import { Box, Button, Em, Inline, Link, Lozenge, SectionMessage, Stack, Strong, Text, TextArea, xcss } from '@forge/react';
+
+const cardStyle = xcss({
+  borderColor: 'color.border',
+  borderStyle: 'solid',
+  borderWidth: 'border.width',
+  borderRadius: 'border.radius.200',
+  padding: 'space.200'
+});
+
+/**
+ * Absolute link for the current site. The resolver returns Jira links as site-relative paths
+ * (`/browse/MC-1`); Confluence links are already absolute. Returns null when no valid link exists.
+ */
+export function siteLink(siteUrl, url) {
+  if (!url) return null;
+  if (/^https:\/\//i.test(url)) return url;
+  if (url.startsWith('/') && siteUrl) return `${String(siteUrl).replace(/\/+$/, '')}${url}`;
+  return null;
+}
+
+export const KIND_GROUPS = [
+  { kind: 'decision', title: 'Decisions' },
+  { kind: 'open_question', title: 'Open questions' },
+  { kind: 'proposal', title: 'Proposals' }
+];
+
+const KIND_LABEL = {
+  decision: { text: 'Decision', appearance: 'success' },
+  open_question: { text: 'Open question', appearance: 'moved' },
+  proposal: { text: 'Proposal', appearance: 'new' }
+};
+
+const SOURCE_LABEL = {
+  confluence_page: 'Confluence page',
+  jira_issue: 'Jira issue',
+  jira_comment: 'Jira comment'
+};
+
+function sourceMeta(source) {
+  const date = /^\d{4}-\d{2}-\d{2}/.test(source.updatedAt ?? '') ? source.updatedAt.slice(0, 10) : null;
+  return [SOURCE_LABEL[source.type] ?? source.type, date, source.author].filter(Boolean).join(' · ');
+}
+
+function sourceVia(source) {
+  return source.via ? `Found through ${source.via}` : null;
+}
+
+export const MAX_NOTE_LENGTH = 2000;
+
+/**
+ * Payload for the preview and note resolvers. `digest` identifies the exact comment preview the
+ * person confirmed; the server posts only if its rebuilt comment still matches it.
+ */
+export function notePayload(candidate, issueKey, note, digest) {
+  return {
+    projectKey: candidate.source.projectKey,
+    candidateId: candidate.id,
+    issueKey,
+    note,
+    ...(digest ? { digest } : {})
+  };
+}
+
+/** Payload for the `draftDecisionNote` resolver. */
+export function draftPayload(candidate, issueKey) {
+  return { projectKey: candidate.source.projectKey, candidateId: candidate.id, issueKey };
+}
+
+/** Records a posted note on the matching candidate in a scan result. */
+export function withNote(result, candidateId, issueKey, note) {
+  return result && {
+    ...result,
+    candidates: result.candidates.map((item) => (
+      item.id === candidateId ? { ...item, notes: { ...(item.notes ?? {}), [issueKey]: note } } : item
+    ))
+  };
+}
+
+/** The note offered for editing before it is posted. Uses only the finding's own words. */
+export function defaultNote(candidate) {
+  const where = SOURCE_LABEL[candidate.source.type]?.toLowerCase() ?? 'source';
+  const label = candidate.kind === 'decision' ? 'A decision' : candidate.kind === 'open_question' ? 'An open question' : 'A proposal';
+  return `${label} recorded in a ${where} may affect this issue: ${candidate.summary}\nPlease check whether this issue needs updating.`;
+}
+
+/** The exact comment text, line by line, as the server built it. */
+export function CommentPreview({ preview, title = 'Comment preview: exactly what will be posted' }) {
+  return (
+    <SectionMessage appearance={preview.mode === 'quoted' ? 'information' : 'warning'} title={title}>
+      <Stack space="space.050">
+        {preview.explanation && <Text><Em>{preview.explanation}</Em></Text>}
+        {preview.text.split('\n').map((line, index) => <Text key={index}>{index === 0 ? <Strong>{line}</Strong> : line}</Text>)}
+      </Stack>
+    </SectionMessage>
+  );
+}
+
+/**
+ * Review and confirm one comment before it is posted. The server builds the exact comment; nothing
+ * is sent until "Post" is selected on that preview. When the source cannot be quoted to the
+ * issue's audience, the comment is a fixed follow-up and there is no note to edit. In the sample,
+ * the preview is built from bundled data and nothing can be posted.
+ */
+function NoteAction({ candidate, issueKey, siteUrl, onApplyNote, onPreviewNote, onDraftNote, sample = false, emphasis = false }) {
+  const [draft, setDraft] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [drafting, setDrafting] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [draftInfo, setDraftInfo] = useState(null);
+  const applied = candidate.notes?.[issueKey];
+
+  if (applied) {
+    const href = applied.commentId ? siteLink(siteUrl, `/browse/${issueKey}?focusedCommentId=${applied.commentId}`) : null;
+    return (
+      <Stack space="space.050">
+        <Text>
+          Note added to {issueKey}{applied.appliedAt ? ` on ${new Date(applied.appliedAt).toLocaleDateString()}` : ''}
+          {href ? <>{' · '}<Link href={href}>View comment</Link></> : null}
+        </Text>
+        {message && <SectionMessage appearance="warning">{message}</SectionMessage>}
+      </Stack>
+    );
+  }
+
+  const showPreview = async (note) => {
+    setBusy(true);
+    setMessage(null);
+    const result = await onPreviewNote(issueKey, note);
+    setBusy(false);
+    if (result?.ok) setPreview(result);
+    else setMessage(result?.error ?? 'Could not prepare the comment preview. Try again.');
+  };
+
+  if (draft === null) {
+    return (
+      <Stack space="space.050">
+        <Inline>
+          <Button appearance={emphasis ? 'primary' : 'default'} isDisabled={busy} onClick={async () => {
+            const note = defaultNote(candidate);
+            setDraft(note);
+            await showPreview(note);
+          }}>
+            {sample ? `Preview a note for ${issueKey}` : `Add note to ${issueKey}`}
+          </Button>
+        </Inline>
+        {message && <SectionMessage appearance="error">{message}</SectionMessage>}
+      </Stack>
+    );
+  }
+
+  const trimmed = draft.trim();
+  const generic = preview?.mode === 'generic';
+  const current = preview && (generic || preview.note === trimmed);
+  const draftWithAi = async () => {
+    setDrafting(true);
+    setMessage(null);
+    setDraftInfo(null);
+    const result = await onDraftNote(issueKey);
+    setDrafting(false);
+    if (result?.ok) {
+      setDraft(result.note);
+      setPreview(null);
+      setDraftInfo(result.suggestion
+        ? 'Drafted by AI. The suggested description change quotes the issue word for word. Check the note, then preview the comment.'
+        : 'Drafted by AI from the finding and the issue. Check the note, then preview the comment.');
+    } else {
+      setMessage(result?.error ?? 'The AI could not draft a note. You can still write it yourself.');
+    }
+  };
+  const post = async () => {
+    setBusy(true);
+    setMessage(null);
+    const result = await onApplyNote(issueKey, generic ? '' : trimmed, preview.digest);
+    setBusy(false);
+    if (result?.ok) {
+      setDraft(null);
+      setPreview(null);
+      setMessage(result.warning ?? null);
+    } else {
+      if (result?.preview) setPreview(result.preview);
+      setMessage(result?.error ?? 'Could not add the note. Try again.');
+    }
+  };
+  const cancel = () => { setDraft(null); setPreview(null); setMessage(null); setDraftInfo(null); };
+
+  return (
+    <Stack space="space.075">
+      {sample && (
+        <SectionMessage appearance="information" title="Sample only">
+          This shows what a teammate would see before posting. Nothing is saved, and nothing is posted to Jira.
+        </SectionMessage>
+      )}
+      {!generic && (
+        <>
+          <Text>Edit the note, then preview the exact comment. It is posted on {issueKey} in your name.</Text>
+          <TextArea
+            name={`note-${candidate.id}-${issueKey}`}
+            value={draft}
+            minimumRows={5}
+            resize="vertical"
+            onChange={(event) => setDraft(event.target.value)}
+            isDisabled={busy || drafting}
+          />
+          {draftInfo && <Text><Em>{draftInfo}</Em></Text>}
+          {trimmed.length > MAX_NOTE_LENGTH && <Text>The note is too long ({trimmed.length} of {MAX_NOTE_LENGTH} characters).</Text>}
+        </>
+      )}
+      {preview && current && <CommentPreview preview={preview} />}
+      {message && <SectionMessage appearance="error">{message}</SectionMessage>}
+      <Inline space="space.100">
+        {!generic && !current && (
+          <Button appearance="primary" isDisabled={busy || drafting || !trimmed || trimmed.length > MAX_NOTE_LENGTH} onClick={() => showPreview(trimmed)}>
+            {busy ? 'Preparing…' : 'Preview comment'}
+          </Button>
+        )}
+        {current && !sample && (
+          <Button appearance="primary" isDisabled={busy || drafting} onClick={post}>
+            {busy ? 'Posting…' : generic ? `Post follow-up to ${issueKey}` : `Post comment to ${issueKey}`}
+          </Button>
+        )}
+        {onDraftNote && !generic && !sample && (
+          <Button appearance="default" isDisabled={busy || drafting} onClick={draftWithAi}>
+            {drafting ? 'Drafting…' : 'Draft with AI'}
+          </Button>
+        )}
+        <Button appearance="subtle" isDisabled={busy || drafting} onClick={cancel}>{sample ? 'Close preview' : 'Cancel'}</Button>
+      </Inline>
+    </Stack>
+  );
+}
+
+/** How strongly an issue is tied to the finding, in words, from the matcher's score. */
+export function matchStrength(affected) {
+  if (affected.wordingStatus === 'outdated') return 'Strong match: still uses the replaced wording';
+  // A corrected issue can still share terms with the decision; it is no longer an active match.
+  if (affected.drift?.status === 'resolved') return 'Corrected since it was found';
+  if (affected.relevance >= 0.75) return 'Strong match';
+  if (affected.relevance >= 0.45) return 'Possible match';
+  return 'Weak match';
+}
+
+/**
+ * One extracted candidate with its evidence and the reasons behind every match.
+ * `issueUrls` maps issue keys to links; `hideIssueKeys` skips the key on the issue panel.
+ * `onApplyNote(issueKey, note)` posts a reviewed note; it is offered only once the finding
+ * is marked relevant. `onDraftNote(issueKey)` asks the AI for a draft the person then edits. `sample` marks a finding from the bundled sample project: it has no
+ * links on this site and cannot be reviewed.
+ */
+const shortDate = (value) => (value ? new Date(value).toLocaleDateString() : '');
+
+/** One line on whether the issue still uses the replaced wording, from the radar's history. */
+function DriftLine({ drift }) {
+  if (!drift) return null;
+  if (drift.status === 'resolved') {
+    // Removing the old wording is all the app has verified; a replacement is shown only when the
+    // decision names one and the issue's current text contains it.
+    return (
+      <Stack space="space.025">
+        {/* The labels get their own row: sharing it with the sentence squeezed them to "Old wor…" in the narrow issue panel. */}
+        <Inline space="space.100" alignBlock="center" shouldWrap>
+          <Lozenge appearance="success">Old wording removed</Lozenge>
+          {drift.replacementFound && <Lozenge appearance="success">Replacement wording found</Lozenge>}
+        </Inline>
+        <Text>
+          No longer mentions “{drift.phrase}” · {shortDate(drift.resolvedAt)}
+          {drift.resolvedBy === 'issue-update' ? ' · noticed when the issue was edited' : ' · found by a later scan'}
+        </Text>
+        {drift.replacement && (
+          <Text>
+            <Em>
+              {drift.replacementFound
+                ? `Now mentions “${drift.replacement}”, the wording the decision asks for.`
+                : `The decision's wording (“${drift.replacement}”) is not in the issue yet. Check the issue says what was decided.`}
+            </Em>
+          </Text>
+        )}
+      </Stack>
+    );
+  }
+  // An issue edit or creation can open (or reopen) a drift before anyone scans; say which.
+  const cause = drift.foundBy === 'issue-create' ? ', when the issue was created'
+    : drift.foundBy === 'issue-edit' ? (drift.reopenedAt ? ', and again when the issue was edited' : ', when the issue was edited')
+      : '';
+  return (
+    <Text>
+      <Em>Drifting since {shortDate(drift.firstSeenAt)}{cause}: the issue still says “{drift.phrase}”.</Em>
+      {drift.isNew ? ' · New since your last visit' : ''}
+    </Text>
+  );
+}
+
+/** The headline status of a finding across its issues: drifting beats corrected beats nothing. */
+export function driftStatus(candidate) {
+  const open = (candidate.affectedIssues ?? []).filter((a) => a.drift?.status === 'open' || a.wordingStatus === 'outdated');
+  if (open.length > 0) return { open: open.length, keys: open.map((a) => a.issueKey) };
+  const corrected = (candidate.resolvedIssues ?? []).length
+    + (candidate.affectedIssues ?? []).filter((a) => a.drift?.status === 'resolved').length;
+  return corrected > 0 ? { corrected } : null;
+}
+
+export function CandidateCard({ candidate, siteUrl, issueUrls = {}, hideIssueKeys = false, onReview, reviewBusy = false, onApplyNote, onPreviewNote, onDraftNote, sample = false, followUpHere = null }) {
+  const kind = KIND_LABEL[candidate.kind] ?? KIND_LABEL.proposal;
+  const { source } = candidate;
+  const sourceHref = siteLink(siteUrl, source.url);
+  // Sample reviews live only in this page's memory: they are never saved.
+  const [sampleReview, setSampleReview] = useState(null);
+  const [showWhy, setShowWhy] = useState(false);
+  const review = sample ? sampleReview : candidate.review;
+  const canNote = (sample ? Boolean(onPreviewNote) : Boolean(onApplyNote)) && review?.status === 'relevant';
+  const reviewWith = sample
+    ? (choice) => setSampleReview(choice === 'reset' ? null : { status: choice, reviewedAt: null })
+    : onReview;
+  const status = driftStatus(candidate);
+  // Drifting and stronger matches first; weak matches stay folded under "Why this was flagged".
+  const isDrifting = (a) => a.wordingStatus === 'outdated' || a.drift?.status === 'open';
+  const isWeak = (a) => !isDrifting(a) && !a.drift && a.relevance < 0.45 && !candidate.notes?.[a.issueKey];
+  const weakCount = candidate.affectedIssues.filter(isWeak).length;
+  const shownIssues = candidate.affectedIssues.filter((a) => showWhy || !isWeak(a));
+  const issueLink = (issueKey) => {
+    const href = sample ? null : siteLink(siteUrl, issueUrls[issueKey] ?? `/browse/${issueKey}`);
+    return href ? <Link href={href}>{issueKey}</Link> : issueKey;
+  };
+
+  return (
+    <Box xcss={cardStyle}>
+      <Stack space="space.100">
+        <Inline space="space.100" alignBlock="center" shouldWrap>
+          <Lozenge appearance={kind.appearance}>{kind.text}</Lozenge>
+          {status?.open && <Lozenge appearance="removed" isBold>{hideIssueKeys ? 'Drifting' : `Drifting on ${status.keys.join(', ')}`}</Lozenge>}
+          {!status?.open && status?.corrected && <Lozenge appearance="success">Corrected</Lozenge>}
+          {candidate.ai && <Lozenge appearance="new">Found by AI</Lozenge>}
+          {candidate.isNew && <Lozenge appearance="inprogress">New since your last visit</Lozenge>}
+        </Inline>
+        {followUpHere && (() => {
+          const commentHref = followUpHere.commentId && followUpHere.issueKey
+            ? siteLink(siteUrl, `/browse/${followUpHere.issueKey}?focusedCommentId=${followUpHere.commentId}`)
+            : null;
+          return (
+            <SectionMessage appearance="information" title="The follow-up on this issue is about this decision">
+              <Text>
+                A Decision Drift Radar follow-up for this decision was posted on this issue{followUpHere.appliedAt ? ` on ${shortDate(followUpHere.appliedAt)}` : ''}. Its source and the reason are below.
+                {commentHref ? <>{' '}<Link href={commentHref}>View comment</Link></> : null}
+              </Text>
+            </SectionMessage>
+          );
+        })()}
+        <Text><Strong>{candidate.summary}</Strong></Text>
+        <Text><Em>“{candidate.evidence.quote}”</Em></Text>
+        <Text>
+          {sourceHref ? <Link href={sourceHref}>{source.title || 'Source'}</Link> : source.title}
+          {` · ${sourceMeta(source)}`}
+        </Text>
+
+        {candidate.affectedIssues.length > 0 ? (
+          <Stack space="space.075">
+            {shownIssues.map((affected) => (
+              <Stack key={affected.issueKey} space="space.050">
+                <Inline space="space.100" alignBlock="center" shouldWrap>
+                  <Text>
+                    {hideIssueKeys ? 'This issue' : <>May affect {issueLink(affected.issueKey)}</>}
+                    {` · ${matchStrength(affected)}`}
+                  </Text>
+                  {affected.wordingStatus === 'outdated' && <Lozenge appearance="moved">Outdated wording found</Lozenge>}
+                  {affected.wordingStatus === 'replacement-found' && <Lozenge appearance="success">Replacement wording found</Lozenge>}
+                </Inline>
+                <DriftLine drift={affected.drift} />
+                {showWhy && (
+                  <Stack space="space.025">
+                    {affected.reasons.map((reason) => <Text key={reason}>• {reason}</Text>)}
+                    {affected.drift?.status !== 'resolved' && (
+                      <Text><Em>Match score {affected.relevance.toFixed(2)}: a signal strength from these reasons, not a probability.</Em></Text>
+                    )}
+                  </Stack>
+                )}
+                {(canNote || candidate.notes?.[affected.issueKey]) && (
+                  <NoteAction
+                    candidate={candidate}
+                    issueKey={affected.issueKey}
+                    siteUrl={siteUrl}
+                    onApplyNote={onApplyNote}
+                    onPreviewNote={onPreviewNote}
+                    onDraftNote={onDraftNote}
+                    sample={sample}
+                    emphasis={isDrifting(affected)}
+                  />
+                )}
+              </Stack>
+            ))}
+            {!showWhy && weakCount > 0 && (
+              <Text><Em>{weakCount === 1 ? '1 weaker match' : `${weakCount} weaker matches`} hidden. Select Why this was flagged to see {weakCount === 1 ? 'it' : 'them'}.</Em></Text>
+            )}
+          </Stack>
+        ) : (
+          <Text>No Jira issue in this project clearly points at this. Review it manually.</Text>
+        )}
+        {(candidate.resolvedIssues ?? []).length > 0 && (
+          <Stack space="space.050">
+            <Text><Strong>Resolved since it was found</Strong></Text>
+            {candidate.resolvedIssues.map((resolved) => (
+              <Stack key={resolved.issueKey} space="space.025">
+                <Text>{issueLink(resolved.issueKey)}</Text>
+                <DriftLine drift={resolved} />
+              </Stack>
+            ))}
+          </Stack>
+        )}
+
+        {showWhy && (
+          <Stack space="space.025">
+            <Text>Wording signals ({candidate.confidence.toFixed(2)}): {candidate.confidenceReasons.join('; ')}</Text>
+            {sourceVia(source) && <Text><Em>{sourceVia(source)}</Em></Text>}
+            {candidate.ai && <Text><Em>Found by AI. The quote is checked word for word against the source; whether it records a real decision needs a teammate's review.</Em></Text>}
+          </Stack>
+        )}
+
+        <Inline space="space.100" alignBlock="center" shouldWrap>
+          {review ? (
+            <>
+              <Lozenge appearance={review.status === 'relevant' ? 'success' : 'removed'}>
+                {review.status === 'relevant' ? 'Marked relevant' : 'Dismissed'}
+              </Lozenge>
+              <Text>{sample ? 'Sample only: not saved' : `Reviewed${review.reviewedBy === 'you' ? ' by you' : review.reviewedBy === 'teammate' ? ' by a teammate' : ''} ${review.reviewedAt ? new Date(review.reviewedAt).toLocaleDateString() : ''}`}</Text>
+            </>
+          ) : <Text>{sample ? 'Sample: try the review a teammate would do. Nothing is saved.' : 'Needs teammate review'}</Text>}
+        </Inline>
+        <Inline space="space.100" alignBlock="center" shouldWrap>
+          {reviewWith && !review && <>
+            <Button appearance={canNote ? 'default' : 'primary'} isDisabled={reviewBusy} onClick={() => reviewWith('relevant')}>
+              {sample ? 'Mark relevant (sample)' : 'Mark relevant'}
+            </Button>
+            <Button appearance="subtle" isDisabled={reviewBusy} onClick={() => reviewWith('dismissed')}>
+              {sample ? 'Dismiss (sample)' : 'Dismiss'}
+            </Button>
+          </>}
+          {reviewWith && review && (
+            <Button appearance="subtle" isDisabled={reviewBusy} onClick={() => reviewWith('reset')}>Undo review</Button>
+          )}
+          <Button appearance="subtle" onClick={() => setShowWhy(!showWhy)}>
+            {showWhy ? 'Hide why this was flagged' : 'Why this was flagged'}
+          </Button>
+        </Inline>
+      </Stack>
+    </Box>
+  );
+}

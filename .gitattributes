@@ -1,0 +1,5 @@
+# Benchmark notes are unmodified copies of third-party files; keep their whitespace as published.
+benchmark/corpus/** -whitespace
+benchmark/heldout/** -whitespace
+benchmark/recall/** -whitespace
+benchmark/fresh/** -whitespace

@@ -1,0 +1,252 @@
+{
+  "candidates": [
+    {
+      "id": "dc_9c6a33eabf84f3a8",
+      "kind": "decision",
+      "summary": "Dispatch assigns jobs by postcode instead of by technician seniority.",
+      "evidence": {
+        "quote": "Decision: Dispatch assigns jobs by postcode instead of by technician seniority.",
+        "start": 67,
+        "end": 146
+      },
+      "source": {
+        "id": "fs-review",
+        "type": "confluence_page",
+        "title": "Route planning review: decisions",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-review",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.95,
+      "confidenceReasons": [
+        "Starts with a \"Decision:\" label",
+        "Source title suggests a decision record",
+        "Listed under a decisions heading"
+      ],
+      "affectedIssues": [
+        {
+          "issueKey": "FS-10",
+          "relevance": 0.94,
+          "wordingStatus": "outdated",
+          "outdatedWording": "by technician seniority",
+          "reasons": [
+            "The issue still mentions “by technician seniority”, which this decision replaces",
+            "Shares terms with the issue: “seniority”, “assigns”, “technician”, “jobs”"
+          ]
+        },
+        {
+          "issueKey": "FS-15",
+          "relevance": 0.74,
+          "wordingStatus": "replacement-found",
+          "reasons": [
+            "The issue already uses the new wording “by postcode”",
+            "Shares terms with the issue: “dispatch”, “postcode”, “assigns”, “jobs”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dc_27488d13f51184a5",
+      "kind": "decision",
+      "summary": "Technicians carry one shared parts kit per van.",
+      "evidence": {
+        "quote": "Technicians carry one shared parts kit per van.",
+        "start": 149,
+        "end": 196
+      },
+      "source": {
+        "id": "fs-review",
+        "type": "confluence_page",
+        "title": "Route planning review: decisions",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-review",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.8,
+      "confidenceReasons": [
+        "A list item recorded as an outcome",
+        "Source title suggests a decision record",
+        "Listed under a decisions heading"
+      ],
+      "affectedIssues": [
+        {
+          "issueKey": "FS-11",
+          "relevance": 0.6,
+          "reasons": [
+            "Shares terms with the issue: “parts”, “kit”, “van”, “technicians”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dc_b0ce086d6aeb4dc3",
+      "kind": "open_question",
+      "summary": "Do contractors use the same mobile app?",
+      "evidence": {
+        "quote": "Open question: Do contractors use the same mobile app?",
+        "start": 199,
+        "end": 253
+      },
+      "source": {
+        "id": "fs-review",
+        "type": "confluence_page",
+        "title": "Route planning review: decisions",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-review",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.85,
+      "confidenceReasons": [
+        "Starts with an \"Open question:\" label"
+      ],
+      "affectedIssues": []
+    },
+    {
+      "id": "dc_44476ead4745042f",
+      "kind": "proposal",
+      "summary": "We should pilot the new route optimiser in the northern region first.",
+      "evidence": {
+        "quote": "We should pilot the new route optimiser in the northern region first.",
+        "start": 263,
+        "end": 332
+      },
+      "source": {
+        "id": "fs-review",
+        "type": "confluence_page",
+        "title": "Route planning review: decisions",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-review",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.55,
+      "confidenceReasons": [
+        "Suggests a change but does not record a decision"
+      ],
+      "affectedIssues": []
+    },
+    {
+      "id": "dc_0b562dc827604d8e",
+      "kind": "proposal",
+      "summary": "Dev: I think we agreed to drop the night surcharge.",
+      "evidence": {
+        "quote": "dev: I think we agreed to drop the night surcharge.",
+        "start": 142,
+        "end": 193
+      },
+      "source": {
+        "id": "fs-standup",
+        "type": "confluence_page",
+        "title": "Field ops standup",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-standup",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.45,
+      "confidenceReasons": [
+        "A personal view on a transcript line, not a recorded decision"
+      ],
+      "affectedIssues": []
+    },
+    {
+      "id": "dc_d0aa2a4fd1110a31",
+      "kind": "decision",
+      "summary": "We decided to send customer arrival texts 30 minutes ahead rather than the evening before.",
+      "evidence": {
+        "quote": "We decided to send customer arrival texts 30 minutes ahead rather than the evening before.",
+        "start": 194,
+        "end": 284
+      },
+      "source": {
+        "id": "fs-standup",
+        "type": "confluence_page",
+        "title": "Field ops standup",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-standup",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.7,
+      "confidenceReasons": [
+        "Says the team agreed or decided"
+      ],
+      "affectedIssues": [
+        {
+          "issueKey": "FS-13",
+          "relevance": 0.94,
+          "wordingStatus": "outdated",
+          "outdatedWording": "evening before",
+          "reasons": [
+            "The issue still mentions “evening before”, which this decision replaces",
+            "Shares terms with the issue: “send”, “arrival”, “texts”, “evening”"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "dc_ca99ce3e160bc6e0",
+      "kind": "open_question",
+      "summary": "We have not decided whether apprentices can close jobs alone.",
+      "evidence": {
+        "quote": "We have not decided whether apprentices can close jobs alone.",
+        "start": 373,
+        "end": 434
+      },
+      "source": {
+        "id": "fs-standup",
+        "type": "confluence_page",
+        "title": "Field ops standup",
+        "url": "https://example.atlassian.net/wiki/spaces/FS/pages/fs-standup",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-03T09:00:00Z",
+        "author": "Field Ops"
+      },
+      "confidence": 0.6,
+      "confidenceReasons": [
+        "Says this has not been decided yet"
+      ],
+      "affectedIssues": []
+    },
+    {
+      "id": "dc_b9e54d73fed66b81",
+      "kind": "decision",
+      "summary": "We no longer print delivery notes on site.",
+      "evidence": {
+        "quote": "Agreed: we no longer print delivery notes on site.",
+        "start": 0,
+        "end": 50
+      },
+      "source": {
+        "id": "fs-comment-1",
+        "type": "jira_comment",
+        "title": "Comment on FS-12 by Ruth",
+        "url": "https://example.atlassian.net/browse/FS-12?focusedCommentId=1",
+        "projectKey": "FS",
+        "updatedAt": "2026-11-04T15:00:00Z",
+        "author": "Ruth"
+      },
+      "confidence": 0.85,
+      "confidenceReasons": [
+        "Starts with an \"Agreed:\" label"
+      ],
+      "affectedIssues": [
+        {
+          "issueKey": "FS-12",
+          "relevance": 0.98,
+          "wordingStatus": "outdated",
+          "outdatedWording": "print delivery notes",
+          "reasons": [
+            "The decision was recorded on FS-12",
+            "The issue still mentions “print delivery notes”, which this decision replaces",
+            "Shares terms with the issue: “print”, “delivery”, “notes”, “site”"
+          ]
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}
