@@ -41,12 +41,14 @@ function Tile({ value, label, alert = false }) {
 }
 
 /** The radar at a glance: what needs attention first. */
-function Summary({ radar, previousVisitAt }) {
+function Summary({ radar, previousVisitAt, candidates = [] }) {
+  // One count per finding: a new finding with a new drift is still one new thing.
+  const newSinceVisit = candidates.filter((c) => c.isNew || c.affectedIssues?.some((a) => a.drift?.isNew)).length;
   return (
     <Stack space="space.100">
       <Inline space="space.150" shouldWrap>
         <Tile value={radar.drifting} label={radar.drifting === 1 ? 'open drift' : 'open drifts'} alert={radar.drifting > 0} />
-        {previousVisitAt && <Tile value={radar.newDrifts + radar.newSinceLastVisit} label="new since last visit" />}
+        {previousVisitAt && <Tile value={newSinceVisit} label="new since last visit" />}
         <Tile value={radar.findings} label={radar.findings === 1 ? 'finding' : 'findings'} />
         <Tile value={radar.resolved} label="resolved" />
       </Inline>
@@ -378,7 +380,7 @@ function App() {
       {(result.candidates ?? []).length === 0 && !(aiResult?.candidates?.length > 0) ? (
         <EmptyState
           header={`No decisions found in ${result.projectKey} yet`}
-          description={`Radar looks for explicit wording such as “Decision:”, “we agreed” or “we decided to” in ${result.projectKey}'s issues, comments and the Confluence pages that mention it. Add a decision like that to a page or an issue and scan again, add a decision page by link in Settings, or try the sample to see what a finding looks like.`}
+          description={`Radar looks for explicit wording such as “Decision:”, “we agreed” or “we decided to” in ${result.projectKey}'s issues, comments and the Confluence pages that mention it. Add a decision like that to a page or an issue and scan again, add a decision page by link in Settings, or try the sample to see what a finding looks like.${!result.sample && !(result.pages?.length > 0) ? ' No Confluence page was found: on a brand-new site, Confluence search can take 20 minutes or more to index new pages, while issues and comments are read straight away.' : ''}`}
           primaryAction={<Button appearance="primary" onClick={scanSample} isDisabled={loading || aiLoading}>Try with sample data</Button>}
           secondaryAction={result.sample ? undefined : <Button onClick={() => scan(result.projectKey)} isDisabled={loading || aiLoading}>Scan again</Button>}
         />
@@ -453,9 +455,10 @@ function App() {
         </Stack>
       ) : (
         <SectionMessage appearance="information" title="No matching Confluence pages found">
-          The scan looks for pages that mention {result.projectKey ?? 'the project key'}. A page created in the last few
-          minutes may not be searchable yet, so scan again shortly. A decision page that doesn't mention the key can be
-          added by link in Settings.
+          The scan looks for pages that mention {result.projectKey ?? 'the project key'} through Confluence search. A new
+          page may not be searchable yet: usually a few minutes, but on a brand-new site Confluence can take 20 minutes or
+          more to index its first pages. Scan again later. A decision page that doesn't mention the key can be added by
+          link in Settings once it is searchable. A decision written in an issue or comment is found straight away.
         </SectionMessage>
       )}
       {result.issues.length > 0 && (
@@ -539,7 +542,7 @@ function App() {
               from or written to your site. Choose a project to scan your own work.
             </SectionMessage>
           )}
-          {result.radar && <Summary radar={result.radar} previousVisitAt={result.previousVisitAt} />}
+          {result.radar && <Summary radar={result.radar} previousVisitAt={result.previousVisitAt} candidates={result.candidates} />}
           <Text>
             Scanned {result.issues.length} {result.sample ? 'sample' : `recent ${result.projectKey}`} issues and {result.pages?.length ?? 0}
             {result.sample ? ' sample' : ''} Confluence{result.pages?.length === 1 ? ' page' : ' pages'}.

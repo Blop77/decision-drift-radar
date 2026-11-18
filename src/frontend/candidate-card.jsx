@@ -80,7 +80,8 @@ export function withNote(result, candidateId, issueKey, note) {
 
 /** The note offered for editing before it is posted. Uses only the finding's own words. */
 export function defaultNote(candidate) {
-  const where = SOURCE_LABEL[candidate.source.type]?.toLowerCase() ?? 'source';
+  // Product names keep their capitals: "a Jira comment", "a Confluence page".
+  const where = SOURCE_LABEL[candidate.source.type] ?? 'source';
   const label = candidate.kind === 'decision' ? 'A decision' : candidate.kind === 'open_question' ? 'An open question' : 'A proposal';
   return `${label} recorded in a ${where} may affect this issue: ${candidate.summary}\nPlease check whether this issue needs updating.`;
 }
@@ -364,7 +365,8 @@ export function CandidateCard({ candidate, siteUrl, issueUrls = {}, hideIssueKey
                     {` · ${matchStrength(affected)}`}
                   </Text>
                   {affected.wordingStatus === 'outdated' && <Lozenge appearance="moved">Outdated wording found</Lozenge>}
-                  {affected.wordingStatus === 'replacement-found' && <Lozenge appearance="success">Replacement wording found</Lozenge>}
+                  {/* The drift line below already says so for a corrected issue; show the label once. */}
+                  {affected.wordingStatus === 'replacement-found' && !affected.drift?.replacementFound && <Lozenge appearance="success">Replacement wording found</Lozenge>}
                 </Inline>
                 <DriftLine drift={affected.drift} />
                 {showWhy && (
