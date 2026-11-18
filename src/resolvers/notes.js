@@ -99,7 +99,7 @@ export function noteEvidence(candidate, siteUrl) {
 
 /** The suggested note, using only the finding's own words. The person edits it before posting. */
 export function defaultNoteText(candidate) {
-  const where = { confluence_page: 'Confluence page', jira_issue: 'Jira issue', jira_comment: 'Jira comment' }[candidate.source.type]?.toLowerCase() ?? 'source';
+  const where = { confluence_page: 'Confluence page', jira_issue: 'Jira issue', jira_comment: 'Jira comment' }[candidate.source.type] ?? 'source';
   const label = candidate.kind === 'decision' ? 'A decision' : candidate.kind === 'open_question' ? 'An open question' : 'A proposal';
   return `${label} recorded in a ${where} may affect this issue: ${candidate.summary}\nPlease check whether this issue needs updating.`;
 }
