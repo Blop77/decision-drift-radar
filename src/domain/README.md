@@ -28,15 +28,15 @@ A sentence ends at `.`, `!` or `?` followed by a space or the end of the line, s
 
 Checked in this order. The first rule that applies decides.
 
-1. **Labels.** `Decision:`, `Decided:`, `Agreed:`, `Resolved:`, `Conclusion:` or `Outcome:` at the start (a short qualifier is allowed: "Decided in standup:") makes a decision. `Open question:` makes an open question, and `Proposal:` a proposal. Labels are never downgraded.
-2. **Reference lines** such as `Attendees:` or `Agenda:` are never findings.
+1. **Labels.** `Decision:`, `Decided:`, `Agreed:`, `Resolved:`, `Conclusion:`, `Outcome:` or `Consensus:` at the start, followed by text (a short qualifier is allowed: "Decided in standup:") makes a decision. `Open question:` makes an open question, and `Proposal:` a proposal. Labels are never downgraded.
+2. **Reference lines** such as `Attendees:`, `Agenda:` or rfcbot's `Tracking Comment:` are never findings. The sentence after a bare `Conclusion.` or `Outcome:` marker is a decision.
 3. **Reversed** decisions ("was reversed", "was withdrawn") are dropped.
 4. **Not decided yet** ("we have not decided whether…") is an open question.
-5. **Questions** ending in `?` are open questions when they ask what to do and the next transcript line is not another speaker's answer. A reply that is itself a question does not count as an answer.
+5. **Questions** ending in `?` are open questions when they ask what to do and the next transcript line is not another speaker's answer. A reply that is itself a question does not count as an answer. Speaker lines may be list items (`- josh: …`). A question needs at least four words.
 6. **Negated or conditional** wording is dropped: "we did not agree", "once we agree", "we will decide next week", "waiting for approval".
-7. **Commitments** make a decision: "agreed to / that / on", "decided to / against", "it was agreed", "we settled on", "there was consensus", "was approved". On a transcript line, a hedged view ("josh: I think we agreed…") is only a proposal.
+7. **Commitments** make a decision: "agreed to / that / on", "decided to / against", "it was agreed", "we settled on", "the group agrees", "there was consensus", "nobody objects", "was (already) approved", "we are approving". On a transcript line, a hedged view ("josh: I think we agreed…") is only a proposal.
 8. **A list item under a decisions heading** (a heading with "decision", "outcome", "agreed" or "resolution") is a decision, and "we will …" counts as one in a decision record.
-9. **Suggestions** make a proposal: "we should", "I propose", "how about", "let's consider", "we need to", "may be a better idea".
+9. **Suggestions** make a proposal: "we should" (not after "if"), "I propose", "how about", "let's consider", "I think we need", "may be a better idea", "would like to see", "inclined to", "I think this warrants", "the proposal is to".
 
 Confidence starts from the rule (0.85 for a label, 0.7 for commitment wording, lower for questions and suggestions). A decision gains 0.05 for a decision-like source title and 0.05 for sitting under a decisions heading, up to 0.95. It is a signal strength shown to people, not a probability.
 

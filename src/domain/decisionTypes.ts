@@ -127,6 +127,8 @@ export interface SentenceContext {
   decisionListItem?: boolean;
   /** A question on a transcript line that another speaker replies to on the next line. */
   answeredByReply?: boolean;
+  /** The sentence comes right after a bare "Conclusion." or "Outcome:" marker. */
+  followsOutcomeMarker?: boolean;
 }
 
 export type SentenceClassifier = (sentence: string, context: SentenceContext) => SentenceClassification | null;

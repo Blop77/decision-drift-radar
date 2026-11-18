@@ -58,11 +58,13 @@ export function stableId(sourceId: string, summary: string): string {
 // ---------------------------------------------------------------------------
 
 // "Decision:", "Agreed:", also with a short qualifier ("Decided in standup:").
-const DECISION_LABEL = /^(decision|decided|agreed|resolved|resolution|conclusion|outcome)s?\b([^:\n]{0,24}):\s*/i;
+const DECISION_LABEL = /^(decision|decided|agreed|resolved|resolution|conclusion|outcome|consensus)s?\b([^:\n]{0,24}):\s*(?=\S)/i;
+/** A bare "Conclusion." or "Outcome:" that introduces the decision in the sentence after it. */
+const OUTCOME_MARKER = /^(?:conclusion|conclusions|outcome|outcomes|decision|decisions|resolution|consensus)\s*[.:]$/i;
 const QUESTION_LABEL = /^(open question|question)s?\s*:\s*/i;
 const PROPOSAL_LABEL = /^(proposal|proposed|suggestion)s?\s*:\s*/i;
 /** Labels that open reference lines rather than findings. */
-const REFERENCE_LABEL = /^(attendees|participants|present|absent|apologies|agenda|date|time|owner|owners|source|sources|see also|related|links?|location|notes? by|minutes by)\s*:/i;
+const REFERENCE_LABEL = /^(attendees|participants|present|absent|apologies|agenda|date|time|owner|owners|source|sources|see also|related|links?|location|notes? by|minutes by|tracking comment|initiating comment)\s*:/i;
 
 const DECISION_HEADING = /\b(decision|decisions|decided|outcome|outcomes|agreed|agreements?|resolution|resolutions)\b/i;
 const QUESTION_HEADING = /\b(open questions?|questions|unresolved|to decide)\b/i;
@@ -80,22 +82,26 @@ const COMMITMENT: Array<[RegExp, string]> = [
   [/\b(?:it|this|that)\s+(?:was|has been|is)\s+(?:agreed|decided|resolved)\b/, 'Says the team agreed or decided'],
   [/\b(?:we|the team|the group)\s+(?:settled on|settled that|opted for|opted to|chose to|committed to|concluded that)\b/, 'Says the team agreed or decided'],
   [/\b(?:general|broad|full|unanimous)\s+agreement\b|\b(?:there was|we reached|reached)\s+(?:a\s+)?consensus\b|\bconsensus\s+(?:is|was)\s+to\b/, 'Records agreement or consensus'],
-  [/\b(?:was|were|has been|have been|is|got)\s+(?:formally\s+|officially\s+)?approved\b|^approved\b|\b(?:we|leadership|the board|the committee|\w+)\s+approved\s+(?:the|a|an|our|this|that)\b/, 'Records an approval']
+  [/\b(?:was|were|has been|have been|is|got)\s+(?:already\s+|now\s+|formally\s+|officially\s+|then\s+)?approved\b|^approved\b|\b(?:we|leadership|the board|the committee|\w+)\s+approved\s+(?:the|a|an|our|this|that)\b|\bwe(?:'re| are)\s+approving\b|\b(?:and \w+|we|everyone|all|both|the team|the group)\s+approved?\b(?!\s+of)/, 'Records an approval'],
+  [/\b(?:the\s+)?(?:group|team|everyone|all|committee)\s+agrees?\b(?!\s+(?:on\s+)?(?:whether|if))/, 'Records agreement or consensus'],
+  [/\b(?:nobody|no one)\s+(?:has\s+(?:an?\s+)?appetite|objects|objected)\b|\bno objections?\b/, 'Records agreement or consensus']
 ];
 const OUTCOME_WILL = /^(?:so\s+|then\s+|therefore\s+)?(?:we|the team)\s+(?:will|'ll|are going to|are)\s+(?!decide|agree|discuss|talk|think|look|meet|review|consider|need|check|see|try)\w+/;
 
 const PROPOSAL: Array<[RegExp, string]> = [
   [/^(?:proposal|rfc)\s+(?:to|for)\b/, 'Names a proposal that has not been decided'],
-  [/\b(?:we|you|they|the team)\s+(?:should|could|might want to|ought to)\b(?!\s+(?:decide|agree|be able))/, 'Suggests a change but does not record a decision'],
+  [/^(?!if\b|in case\b|when\b|unless\b).*\b(?:we|they|the team|someone|somebody)\s+(?:should|could|might want to|ought to)\b(?!\s+(?:decide|agree|be able))|\byou\s+should\b/, 'Suggests a change but does not record a decision'],
+  [/\b(?:current|the|our|a|one)\s+proposal\s+(?:is\s+)?to\b|\b(?:can|could)\s+(?:this|that|it)\s+be\s+(?:added|changed|included|moved)\b/, 'Proposes a change but does not record a decision'],
+  [/\b(?:i think|i feel|i believe)\s+(?:this|that|it)\s+(?:warrants|needs|deserves)\b|\b(?:i'd|i would|would)\s+like\s+to\s+see\b|\b(?:i'm\s+|i am\s+)?inclined\s+to\b|\bone\s+(?:thought|idea|option)\s+is\b/, 'Suggests a change but does not record a decision'],
   [/\b(?:i|we)\s+(?:propose|suggest|recommend)\b|\b(?:proposal|suggestion)\s+(?:is|was)\s+to\b|\bproposed\s+(?:that|to|we)\b/, 'Proposes a change but does not record a decision'],
   [/\bhow about\b|\blet'?s\s+(?:consider|think about|look at|try)\b|\bwhat if we\b/, 'Suggests a change but does not record a decision'],
   // "We need a marketing asset…" in an issue states a requirement; hedged, it puts an idea to the group.
   [/\b(?:i think|i feel like|i guess|maybe|perhaps)\s+we\s+(?:need|might need|may need)\s+(?:a|an|to)\b|\bwe\s+(?:can|could)\s+just\b/, 'Suggests a change but does not record a decision'],
   [/\bwe(?:'re| are)\s+thinking\s+(?:that|of|about)\b|\b(?:may|might|would)\s+be\s+(?:a\s+)?better\b/, 'Weighs an option but does not record a decision']
 ];
-const ASK_WORD = /^(?:but\s+|so\s+|and\s+)?(?:should|shall|do|does|did|can|could|will|would|are|is|was|were|how|what|which|when|who|where|why)\b/;
+const ASK_WORD = /^(?:but\s+|so\s+|and\s+)?(?:what about|should|shall|do|does|did|can|could|will|would|are|is|was|were|how|what|which|when|who|where|why)\b/;
 /** The question's own clause asks what to do ("…, but would it be enough?"). */
-const asks = (t: string) => ASK_WORD.test(t) || ASK_WORD.test(t.split(/[,;]\s*/).pop() ?? '');
+const asks = (t: string) => t.split(/\s+/).length >= 4 && (ASK_WORD.test(t) || ASK_WORD.test(t.split(/[,;]\s*/).pop() ?? ''));
 
 const labelReason = (label: string) => {
   const word = `${label.charAt(0).toUpperCase()}${label.slice(1).toLowerCase()}`;
@@ -136,12 +142,16 @@ export const defaultClassifier: SentenceClassifier = (sentence, context) => {
   }
   if (NEGATED.test(t) || CONDITIONAL.test(t)) return null;
 
-  const commitment = COMMITMENT.find(([pattern]) => pattern.test(t));
+  // "group agrees: …" looks like a speaker label; check the agreement wording before it too.
+  const commitment = COMMITMENT.find(([pattern]) => pattern.test(t) || (hasSpeaker && pattern.test(raw.toLowerCase())));
   if (commitment) {
     if (hasSpeaker && HEDGED.test(t)) {
       return { kind: 'proposal', confidence: 0.45, reasons: ['A personal view on a transcript line, not a recorded decision'] };
     }
     return { kind: 'decision', confidence: 0.7, reasons: [commitment[1]] };
+  }
+  if (context.followsOutcomeMarker && !t.endsWith('?')) {
+    return { kind: 'decision', confidence: 0.7, reasons: ['Follows a "Conclusion" or "Outcome" marker'] };
   }
   if (context.decisionListItem) {
     return { kind: 'decision', confidence: 0.7, reasons: ['A list item recorded as an outcome'] };
@@ -277,10 +287,10 @@ function contextFor(sentence: Sentence, all: Sentence[], index: number, source: 
   const underDecisionHeading = Boolean(sentence.heading) && DECISION_HEADING.test(sentence.heading) && !QUESTION_HEADING.test(sentence.heading);
   let answeredByReply = false;
   if (sentence.text.trim().endsWith('?')) {
-    const asker = speakerOf(sentence.lineText);
+    const asker = speakerOf(withoutListMark(sentence.lineText));
     const next = all.slice(index + 1).find((s) => s.line > sentence.line);
     // The next speaker answers, unless they reply with a question of their own.
-    const replier = next && next.line === sentence.line + 1 && !next.lineText.includes('?') ? speakerOf(next.lineText) : null;
+    const replier = next && next.line === sentence.line + 1 && !next.lineText.includes('?') ? speakerOf(withoutListMark(next.lineText)) : null;
     answeredByReply = Boolean(asker && replier && asker !== replier);
   }
   return {
@@ -288,9 +298,13 @@ function contextFor(sentence: Sentence, all: Sentence[], index: number, source: 
     sourceTitle: source.title,
     underDecisionHeading,
     decisionListItem: underDecisionHeading && sentence.listItem,
-    answeredByReply
+    answeredByReply,
+    followsOutcomeMarker: index > 0 && OUTCOME_MARKER.test(plain(all[index - 1].text).trim())
   };
 }
+
+/** A transcript line can also be a list item: "- josh: What is the motivation?". */
+const withoutListMark = (line: string) => line.replace(/^(?:[-*\u2022]|\d{1,3}[.)])\s+/, '');
 
 function candidateFor(source: SourceRecord, sentence: Pick<Sentence, 'text' | 'start' | 'end' | 'lineText'>, verdict: SentenceClassification, index: IssueIndex): DecisionCandidate {
   const summary = summarize(sentence.text);

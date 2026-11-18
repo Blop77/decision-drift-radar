@@ -1,0 +1,431 @@
+{
+  "protocol": "Labelled by hand from the source files before the extractor was run on them. decision: the notes record that the group decided, agreed, approved or resolved something, or reached consensus. open_question: a question about what to do that the notes leave unresolved (questions answered later in the notes are not labelled). proposal: a suggestion put to the group that is not recorded as decided. ambiguous: true marks borderline sentences (action items, deferrals, agenda boilerplate, tentative plans, answered or rhetorical questions); they count neither for nor against the extractor. Each label text is a verbatim span of the prepared document, compared after whitespace and case normalisation. Second development set: chosen by the same next-oldest rule, labelled and frozen on 18 Nov 2026 before any rules ran on these files.",
+  "documents": [
+    {
+      "file": "openjs-cpc-2024-12-10.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "Keep issue open while we move items from old repo.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "No update but will remove agenda label.",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "CPC approval of tiny Charter change for Node.js #1399",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Are there any initiatives or agenda items that we should use a working session to further progress on?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "openjs-cpc-2025-01-07.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "This was already approved."
+        },
+        {
+          "kind": "decision",
+          "text": "Agree to put a deadline to EOD today for any objection, good to go otherwise."
+        },
+        {
+          "kind": "decision",
+          "text": "It was decided that we would look at the README restructuring work that had started last year as a part of a “new year github” cleanup effort."
+        },
+        {
+          "kind": "decision",
+          "text": "Generally LGTM",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "CPC approval of tiny Charter change for Node.js #1399",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Are there any initiatives or agenda items that we should use a working session to further progress on?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "openjs-cpc-2025-01-21.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "Approved to move forward"
+        },
+        {
+          "kind": "decision",
+          "text": "general agreement about the plan outlined above."
+        },
+        {
+          "kind": "decision",
+          "text": "closed as out of date",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "Current proposal to run the sessions March 6 & 7 for CPC members and lead maintainers."
+        },
+        {
+          "kind": "open_question",
+          "text": "Non-violent communication / strategic workplace conflict resolution training? #1106",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Are there any initiatives or agenda items that we should use a working session to further progress on?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "openjs-cpc-2025-02-04.md",
+      "labels": [
+        {
+          "kind": "open_question",
+          "text": "JH - Are there ways to incentivize folks to request travel fund early?"
+        },
+        {
+          "kind": "proposal",
+          "text": "CDA - Often booking early is significantly cheaper, can this be added to the policy in some way"
+        },
+        {
+          "kind": "proposal",
+          "text": "BS - I suggest we close this out as we have a process defined and rolled out, we can always tweak as needed."
+        },
+        {
+          "kind": "decision",
+          "text": "minor wording change; doesn’t materially impact anything; legal says its fine",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Non-violent communication / strategic workplace conflict resolution training? #1106",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Are there any initiatives or agenda items that we should use a working session to further progress on?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "rust-lang-team-2022-10-11.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "group agrees: lang thinks current behavior is wrong and should be fixed."
+        },
+        {
+          "kind": "decision",
+          "text": "Niko read it. Left a few notes. Looks ready to merge.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "already future-incompat. Its time to make it a hard-error.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "PhantomData is copy, and therefore cannot require drop.",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nikomatsakis: I think this warrants an RFC."
+        },
+        {
+          "kind": "proposal",
+          "text": "We should have an RFC or something we can point people at."
+        },
+        {
+          "kind": "proposal",
+          "text": "so having the PR include documentation there sounds reasonable.",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nbdd0121: seems good to figure out how it interacts with dylibs.",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "pnkfelix and nikomatsakis wonder if this occurs for newtypes too?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Adding use of `x` at end, does that show that this is not unsound?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "another question is would this test report an error?"
+        },
+        {
+          "kind": "open_question",
+          "text": "It affects dylibs?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "is that documented in the std docs?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "rust-lang-team-2022-10-04.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "Sounds like nobody has appetite for doing this without an edition."
+        },
+        {
+          "kind": "decision",
+          "text": "*nikomatsakis and joshtriplett approve*"
+        },
+        {
+          "kind": "decision",
+          "text": "joshtriplett: posted a comment, marked P-critical",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "nikomatsakis: I think it's a bug",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "FCP already started previously, nomination dropped.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "We should go ahead and make it clear that the FCP was covering \"half open range patterns\" and not \"slice patterns\".",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "joshtriplett: would like to see this as an experiment"
+        },
+        {
+          "kind": "proposal",
+          "text": "joshtriplett: would like to see this unblocked (and help)",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nikomatsakis: inclined to close, can reach out to cramertj, but I don't think we have an experienced team member to drive it"
+        },
+        {
+          "kind": "proposal",
+          "text": "maybe we'll just link to the tracking issue for this one.",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nikomatsakis: We should specify requirements we care about, and then ask the compiler team to meet those."
+        },
+        {
+          "kind": "proposal",
+          "text": "The easy answer is \"ok let's keep `X..` gated for now\".",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nikomatsakis: if we're going to fix it, now's the time to do it, before there's stuff relying on this.",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "scottmcm: what about dyn trait??"
+        },
+        {
+          "kind": "open_question",
+          "text": "joshtriplett: we did decide that we wanted `let _ = x` to be unsafe though, right?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "do we really want to delay this waiting for THIR work?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "joshtriplett: do we agree this is a bug?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Would anyone object to being P-critical?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Otherwise question is, would we choose to do this over an edition?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "scottmcm: was this intentional?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "rust-lang-team-2022-10-18.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "consensus: add the macro and see how popular it is."
+        },
+        {
+          "kind": "decision",
+          "text": "Conclusion. This is a semantic change, but it seems harmless."
+        },
+        {
+          "kind": "decision",
+          "text": "it sounds like there is no near term plan that \"yeah we totally add syntax for this\".",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "nikomatsakis: I'm not inclined to reopen the discussion given that it was highly delberated.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "joshtriplett: sounds like there is general sentiment in favor of a fake-read mechanism, just a question of do we have the semantics?",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nikomatsakis: one thought is that the way you specify a type inferred literal might be a trait with a const fn, so that's an interesting route to explore"
+        },
+        {
+          "kind": "proposal",
+          "text": "Seems like we may want to make a change for consistency.",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "joshtriplett: don't think we should block it, if we add a syntax, macro doesn't break.",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "nikomatsakis: scottmcm, maybe you want to post questions on the PR?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "Should we add an actual feature instead of a macro?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "tmandry: Would you consider it in scope to be able to build stdlib this way eventually?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "What if we actually want them?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "scottmcm: is that a meaningful distinction?",
+          "ambiguous": true
+        }
+      ]
+    },
+    {
+      "file": "rust-lang-team-2022-09-27.md",
+      "labels": [
+        {
+          "kind": "decision",
+          "text": "josh/scott: This is const unstable, so we could for now say that that we are approving this, while also updating the tracking issue with a unresolved question describing the potential one-way door here that rules out certain TypeId implementations."
+        },
+        {
+          "kind": "decision",
+          "text": "thus does not need to go through a \"heavy-weight\" process like FCP merge for approval.)"
+        },
+        {
+          "kind": "decision",
+          "text": "scott: this is const unstable, so we can just merge the PR, we don't need to go through those layers.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "josh: okay. done. Boxes ready for checking.",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "should we delegate decision here to wg-const?"
+        },
+        {
+          "kind": "open_question",
+          "text": "would that suffice here? Or do we need the latter?"
+        },
+        {
+          "kind": "open_question",
+          "text": "lokathor: BTW, is there an inclination one way or the other re the bikeshed `#[derive(const Trait)]` vs `#[derive(Trait(const)]`"
+        },
+        {
+          "kind": "open_question",
+          "text": "josh: does this deserve actual lang FCP, or just some lang review and libs-api FCP?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "scott: related note, do we have any plan in place for avoiding having to re-derive every trait in the standard library?",
+          "ambiguous": true
+        },
+        {
+          "kind": "open_question",
+          "text": "josh: does anybody feel like this should not go in, even unstable?",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "scott: so someone should try to propose a policy such that we stop ripping out the derives (replacing them with ugly manual impls that have the constified forms), and instead work on providing whatever the above feature is.."
+        },
+        {
+          "kind": "proposal",
+          "text": "josh: or we could have TypeId be the thing that is committed to the variant that could not be optimally designed for runtime performance, and people would have to add a separate FastTypeId that you could always convert TypeId to."
+        },
+        {
+          "kind": "proposal",
+          "text": "josh: Anyone up for doing some documentation work here? Scott?",
+          "ambiguous": true
+        },
+        {
+          "kind": "proposal",
+          "text": "I'd like to get folks to review this and agree to it.",
+          "ambiguous": true
+        },
+        {
+          "kind": "decision",
+          "text": "josh: any objection to starting FCP and handling rest asynchronously?",
+          "ambiguous": true
+        }
+      ]
+    }
+  ]
+}

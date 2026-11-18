@@ -1,0 +1,5 @@
+Labels frozen before any rules or model ran on benchmark/dev2/.
+Frozen: 2026-11-18T07:34:27Z
+sha256(labels-dev2.json): 26448763ae27998a4da603aac01ad84f8e35054df371d60cf26d447a00018ade
+sha256(sources-dev2.tsv): 25fddc7276363331b478bc47b5fd7e3467fac8023cdcbe7e1660a5d6e91a85ef
+Licences: same sources as corpus/ (see corpus/LICENSES).
