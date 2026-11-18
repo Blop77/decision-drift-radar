@@ -1,30 +1,31 @@
 # Accuracy benchmark
 
-How well does the rule-based extractor find decisions, open questions and proposals in real meeting notes that were never written for it? This benchmark uses 24 hand-labelled meeting-notes files from open-source projects. The two evaluation sets contain 16 files and 18 strict decision labels between them.
+How well does the rule-based extractor find decisions, open questions and proposals in real meeting notes that were never written for it? This benchmark uses 32 hand-labelled meeting-notes files from open-source projects: two development sets used for tuning and three sets used only for checking. The two evaluation sets contain 16 files and 18 strict decision labels between them.
 
 Run it with `npm run benchmark` (Node 22.18 or later, no install needed). It scores the current rules, shows the published scores of the earlier rules beside them as fixed numbers, prints a summary and writes [RESULTS.md](RESULTS.md) with every miss and false alarm.
 
-## Rules rewritten (17 November 2026)
+## Rules rewritten (17 November 2026), then improved on a second development set (18 November)
 
-The extraction rules in `src/domain` were rewritten from a written specification on 17 November 2026, so that every line of the app is the entrant's own work. The new rules were tuned on the development set only. The held-out, recall and fresh sets were scored once afterwards. All four sets had been seen during earlier work, so none of these numbers is a blind test of the new rules.
+The extraction rules in `src/domain` were rewritten from a written specification on 17 November 2026, so that every line of the app is the entrant's own work. On 18 November a **second development set** was added: 8 more notes from the same public sources, chosen by the same next-oldest rule, labelled and frozen before any rule ran on them ([dev2/FROZEN.txt](dev2/FROZEN.txt)). The rules were then improved using the two development sets only. The held-out, recall and fresh sets were never used for tuning; they were scored once afterwards. All of them had been seen in earlier work, so none of these numbers is a blind test.
 
-| Set (strict labels) | Measure | Earlier rules | Current rules |
-| --- | --- | --- | --- |
-| Development (29) | Anything flagged | 100% / 83% | 96% / 86% |
-| | Decisions | 100% / 70% | 100% / 70% |
-| Held-out (37) | Anything flagged | 88% / 78% | 81% / 57% |
-| | Decisions | 100% / 25% (2 of 8) | 100% / 13% (1 of 8) |
-| | Open questions | 100% / 86% | 92% / 86% |
-| | Proposals | 63% / 80% | 67% / 53% |
-| Recall (10 decisions) | Decisions | 100% / 70% (7 of 10) | 100% / 50% (5 of 10) |
-| Fresh (9) | Anything flagged | 23% / 33% | 15% / 33% |
-| | Decisions | 100% / 20% | 50% / 20% |
+| Set (strict labels) | Measure | Earlier rules (before 17 Nov) | Rewrite (17 Nov) | Current rules (18 Nov) |
+| --- | --- | --- | --- | --- |
+| Development (29) | Anything flagged | 100% / 83% | 96% / 86% | 96% / 86% |
+| | Decisions | 100% / 70% | 100% / 70% | 100% / 70% |
+| Second development (29) | Anything flagged | n/a | 24% / 34% | 59% / 79% |
+| | Decisions | n/a | 80% / 33% | 100% / 92% |
+| Held-out (37) | Anything flagged | 88% / 78% | 81% / 57% | 88% / 59% |
+| | Decisions | 100% / 25% (2 of 8) | 100% / 13% (1 of 8) | 100% / 13% (1 of 8) |
+| Recall (10 decisions) | Decisions | 100% / 70% (7 of 10) | 100% / 50% (5 of 10) | 100% / 70% (7 of 10) |
+| Fresh (9) | Anything flagged | 23% / 33% | 15% / 33% | 36% / 44% |
+| | Decisions | 100% / 20% | 50% / 20% | 100% / 40% |
 
 Each cell is precision / recall. **What changed, plainly:**
 
-- **Development set:** the same level as before. Decision precision and recall are unchanged; open questions and proposals moved slightly in both directions.
-- **Held-out and recall sets: lower recall.** The current rules find 6 of the 18 decisions in these two sets (33%), against 9 of 18 (50%) for the earlier rules, still with no false decision call. On the held-out set, proposal recall fell from 80% to 53%. The new rules were not tuned on these sets, so the drop is reported as it is.
-- **Fresh set:** one false decision call (none before) and more transcript questions flagged as open questions. It has only 9 strict labels.
+- **What the improvements were:** general rules found on the development data, for example approvals worded "was already approved" or "we are approving this", "the group agrees", "consensus:" and "Conclusion." markers, and suggestions such as "would like to see", "inclined to" or "I think this warrants". One real bug was fixed: a speaker line written as a list item ("- josh: What is the motivation?") was not recognised as a speaker, so questions answered on the next line were still reported as open. Bot boilerplate ("Tracking Comment: … has proposed to merge this") is no longer read as a proposal.
+- **Unseen sets:** every unseen set improved or held. The rules now find 8 of the 18 decisions in the held-out and recall sets (44%), against 6 of 18 after the rewrite and 9 of 18 for the earlier rules, with no false decision call on any set. The fresh set's false alarms fell from 15 to 7.
+- **Held-out decisions are still the weak spot:** 1 of 8. Most of them are phrased as "Let’s…" or in prose that a wording rule cannot safely tell apart from discussion. This is what the optional AI pass targets.
+- **Nothing the app shows changed for the bundled sample or the demo projects:** their findings and scores are identical before and after (checked in the tests and against the sample, MC and DRT data).
 - **Rules + AI:** the recorded AI answers (from the earlier rules' run on 13 November) are re-scored with the current rules in [RESULTS.md](RESULTS.md); the model was not run again.
 
 Everything below this section describes the earlier rules and is kept as the historical record.

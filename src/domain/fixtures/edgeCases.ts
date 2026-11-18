@@ -43,6 +43,17 @@ export const sentenceCases: SentenceCase[] = [
   { rule: 'a hedged need is a proposal', text: 'I feel like we need a design meeting about this.', expect: 'proposal' },
   { rule: 'reference line', text: 'Attendees: Sam, Ria, Josh.', expect: null },
   { rule: 'plain statement', text: 'The build took eleven minutes today.', expect: null },
+  { rule: 'approval with an adverb', text: 'This was already approved.', expect: 'decision' },
+  { rule: 'approving in progress', text: 'For now we are approving this, with one open question noted.', expect: 'decision' },
+  { rule: 'group agreement written like a speaker label', text: 'group agrees: the current behaviour is wrong and should be fixed.', expect: 'decision' },
+  { rule: 'consensus label', text: 'consensus: add the macro and see how popular it is.', expect: 'decision' },
+  { rule: 'sentence after a bare conclusion marker', before: ['Conclusion:'], text: 'This change is harmless for existing users.', expect: 'decision' },
+  { rule: 'a bare marker is not itself a finding', text: 'Conclusion:', expect: null },
+  { rule: 'would like to see', text: 'josh: would like to see this as an experiment', expect: 'proposal' },
+  { rule: 'inclined to', text: 'niko: inclined to close this, unless someone wants to drive it.', expect: 'proposal' },
+  { rule: 'bot boilerplate', text: 'Tracking Comment: Team member @niko has proposed to merge this.', expect: null },
+  { rule: 'a conditional "could" is not a suggestion', text: 'If we could fix this, I would say yes.', expect: null },
+  { rule: 'question on a list-item transcript line answered next', text: '- josh: What is the motivation for this change?', after: ['- scott: People wanted to sort them.'], expect: null },
   { rule: 'typographic apostrophe', text: 'We’ve agreed to rename the service.', expect: 'decision' }
 ];
 

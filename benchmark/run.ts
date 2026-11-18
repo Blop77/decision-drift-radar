@@ -44,7 +44,8 @@ const SETS: Array<{ name: string; dir: string; labels: string; sources: string; 
   { name: 'Recall set (decisions only, labels frozen before any run)', dir: 'recall', labels: 'labels-recall.json', sources: 'sources-recall.tsv', kinds: ['decision'] },
   { name: 'Fresh set (labels frozen before any run; used once for the commitment-vs-opinion change)', dir: 'fresh', labels: 'labels-fresh.json', sources: 'sources-fresh.tsv' },
   { name: 'Held-out set', dir: 'heldout', labels: 'labels-heldout.json', sources: 'sources-heldout.tsv' },
-  { name: 'Development set (used for tuning)', dir: 'corpus', labels: 'labels.json', sources: 'sources.tsv' }
+  { name: 'Development set (used for tuning)', dir: 'corpus', labels: 'labels.json', sources: 'sources.tsv' },
+  { name: 'Second development set (used for tuning; labels frozen before any run)', dir: 'dev2', labels: 'labels-dev2.json', sources: 'sources-dev2.tsv' }
 ];
 
 function matches(finding: string, label: string): boolean {
