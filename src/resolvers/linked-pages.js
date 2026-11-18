@@ -95,7 +95,7 @@ export async function addLinkedPage(projectKey, link) {
   }
   const page = (await readPages([id])).get(id);
   if (!page) {
-    return { ok: false, error: 'No Confluence page with that link is visible to you on this site yet. A page created in the last few minutes may not be searchable yet: try again shortly.' };
+    return { ok: false, error: 'No Confluence page with that link is visible to you on this site. Check the link and that you can open the page.' };
   }
   await kvs.set(linkedKey(projectKey), [...links, { id, addedAt: new Date().toISOString() }]);
   return { ok: true, added: { id, title: page.title ?? 'Untitled page' } };

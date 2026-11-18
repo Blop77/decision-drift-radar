@@ -157,7 +157,7 @@ function LinkedPages({ projectKey, siteUrl, onChanged }) {
       <Heading size="small">Confluence pages added by link</Heading>
       <Text>
         Scans include these pages even if they never mention {projectKey}. Up to 10 pages; each person sees only pages
-        they can open. A page created in the last few minutes may not be findable until Confluence has indexed it.
+        they can open. A page is read directly, so a newly published page is included on the next scan.
       </Text>
       {state.pages.map((page) => {
         const href = siteLink(siteUrl, page.url);
@@ -457,8 +457,9 @@ function App() {
         <SectionMessage appearance="information" title="No matching Confluence pages found">
           The scan looks for pages that mention {result.projectKey ?? 'the project key'} through Confluence search. A new
           page may not be searchable yet: usually a few minutes, but on a brand-new site Confluence can take 20 minutes or
-          more to index its first pages. Scan again later. A decision page that doesn't mention the key can be added by
-          link in Settings once it is searchable. A decision written in an issue or comment is found straight away.
+          more to index its first pages. Scan again later, or add the page by link in Settings: pages added by link, and
+          pages found through Teamwork Graph, are read directly and appear on the next scan. A decision written in an
+          issue or comment is also found straight away.
         </SectionMessage>
       )}
       {result.issues.length > 0 && (
