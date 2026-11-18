@@ -9,6 +9,7 @@
 import api, { route } from '@forge/api';
 import { kvs } from '@forge/kvs';
 import { pageSource } from './normalize';
+import { pagesByIds } from './confluence-direct';
 
 export const MAX_LINKED_PAGES = 10;
 export const LINKED_VIA = 'a link added to this project';
@@ -41,13 +42,18 @@ async function storedLinks(projectKey) {
 }
 
 /**
- * Pages read by id through Confluence search as the signed-in person, keyed by id. Search is the
- * read the app's existing permission allows; a page created in the last few minutes can be
- * missing until Confluence has indexed it.
+ * Pages read by id as the signed-in person, keyed by id. Read directly when the app may (a new
+ * page is found at once); otherwise through Confluence search, where a page created in the last
+ * few minutes can be missing until Confluence has indexed it.
  */
 async function readPages(ids) {
   const found = new Map();
   if (!ids.length) return found;
+  const direct = await pagesByIds(ids);
+  if (direct !== null) {
+    for (const page of direct) found.set(String(page.id), page);
+    return found;
+  }
   const cql = `type = page AND id in (${ids.join(',')})`;
   const response = await api.asUser().requestConfluence(
     route`/wiki/rest/api/content/search?cql=${cql}&limit=${ids.length}&expand=version,body.atlas_doc_format,body.storage`

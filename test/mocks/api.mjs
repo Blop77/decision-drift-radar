@@ -7,7 +7,11 @@ const json = (body, status = 200) => ({ ok: status < 400, status, json: async ()
 export default {
   asUser: () => ({
     requestJira: async (path, options) => globalThis.__jira(path, json, options),
-    requestConfluence: async (path) => globalThis.__confluence(path, json),
+    // Direct page reads (/wiki/api/v2/…) answer 403 unless a test sets __confluenceV2, which is
+    // what an install without the read:page:confluence permission sees; the app then searches.
+    requestConfluence: async (path) => (path.startsWith('/wiki/api/v2/')
+      ? (globalThis.__confluenceV2 ? globalThis.__confluenceV2(path, json) : json({ message: 'scope does not match' }, 403))
+      : globalThis.__confluence(path, json)),
     requestTeamworkGraph: async (query, variables, operationName) =>
       (globalThis.__twg ? globalThis.__twg(query, variables, json, operationName) : json({ data: {} }))
   }),

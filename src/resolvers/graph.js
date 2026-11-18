@@ -11,6 +11,7 @@
  */
 import api, { route } from '@forge/api';
 import { pageSource } from './normalize';
+import { decisionPagesInSpace, pagesByIds, spaceIdOf } from './confluence-direct';
 
 const MAX_TEAMS = 5;
 const MAX_SPACES = 8;
@@ -140,6 +141,36 @@ function pageIdOf(node) {
 
 const quote = (value) => `"${String(value).replace(/["\\]/g, '')}"`;
 
+/**
+ * Decision pages in the teams' spaces: read straight from each space when the app may read pages
+ * directly (no wait for search indexing), otherwise found through Confluence search.
+ */
+async function teamSpacePages(spaceTeam, limit) {
+  const spaces = [...spaceTeam.entries()].map(([key, { space }]) => ({ key, id: spaceIdOf(space) }));
+  if (spaces.every((s) => s.id)) {
+    const found = [];
+    let available = true;
+    for (const { key, id } of spaces) {
+      const pages = await decisionPagesInSpace(id, key, limit);
+      if (pages === null) { available = false; break; }
+      found.push(...pages);
+    }
+    if (available) return found.slice(0, limit);
+  }
+  const spaceList = spaces.map((s) => quote(s.key)).join(',');
+  // Pages titled as decision records. Matching body text instead pulls in templates whose
+  // instructions mention decisions (DACI, premortems, meeting-note templates).
+  const cql = `type = page AND space in (${spaceList}) AND (title ~ "decision" OR title ~ "decisions" OR title ~ "decided" OR title ~ "agreed" OR title ~ "ADR") AND NOT title ~ "template" ORDER BY lastmodified DESC`;
+  return confluencePages(cql, limit);
+}
+
+/** Pages by id: read directly when allowed, otherwise through Confluence search. */
+async function pagesById(ids, limit) {
+  const direct = await pagesByIds(ids);
+  if (direct !== null) return direct.slice(0, limit);
+  return confluencePages(`type = page AND id in (${ids.join(',')})`, limit);
+}
+
 async function confluencePages(cql, limit) {
   const response = await api.asUser().requestConfluence(
     route`/wiki/rest/api/content/search?cql=${cql}&limit=${limit}&expand=space,version,body.atlas_doc_format,body.storage`
@@ -263,12 +294,8 @@ export async function discoverViaGraph({ projectKey, projectId, cloudId, knownPa
 
   // 3. Decision pages in those spaces, even when they never mention the project key.
   if (spaceTeam.size > 0 && !outOfTime()) {
-    const spaceList = [...spaceTeam.keys()].map(quote).join(',');
-    // Pages titled as decision records. Matching body text instead pulls in templates whose
-    // instructions mention decisions (DACI, premortems, meeting-note templates).
-    const cql = `type = page AND space in (${spaceList}) AND (title ~ "decision" OR title ~ "decisions" OR title ~ "decided" OR title ~ "agreed" OR title ~ "ADR") AND NOT title ~ "template" ORDER BY lastmodified DESC`;
     try {
-      for (const page of await confluencePages(cql, MAX_SPACE_PAGES)) {
+      for (const page of await teamSpacePages(spaceTeam, MAX_SPACE_PAGES)) {
         if (known.has(String(page.id))) continue;
         const spaceKey = page.space?.key;
         if (spaceKey && !spaceTeam.has(spaceKey)) continue;
@@ -319,9 +346,8 @@ export async function discoverViaGraph({ projectKey, projectId, cloudId, knownPa
       notes.push(`Partial results: could not read Teamwork Graph links from ${failedOrigins} of ${origins.length} decision ${origins.length === 1 ? 'page' : 'pages'}${httpNote(lastError)}. Scan again in a minute.`);
     }
     if (linkedIds.size > 0 && !outOfTime()) {
-      const cql = `type = page AND id in (${[...linkedIds.keys()].join(',')})`;
       try {
-        for (const page of await confluencePages(cql, MAX_LINKED_PAGES)) {
+        for (const page of await pagesById([...linkedIds.keys()], MAX_LINKED_PAGES)) {
           if (known.has(String(page.id))) continue;
           pages.push(pageSource(page, projectKey, 'Teamwork Graph: linked from a decision page found for this project'));
           known.add(String(page.id));
