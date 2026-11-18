@@ -180,6 +180,7 @@ permissions:
     - read:jira-work
     - write:jira-work
     - read:confluence-content.all
+    - read:page:confluence
     - storage:app
     - read:graph:project:jira
     - read:graph:team:atlassian
