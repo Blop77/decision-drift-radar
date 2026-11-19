@@ -123,10 +123,15 @@ Files were chosen by a fixed rule decided before reading them: the most recent m
 | Recall (`recall/`) | OpenJS CPC 2025-04-15, 04-29, 05-13, 05-27 | as above | MIT |
 | | Rust language team 2022-11-08 | as above | Apache-2.0 |
 | | Rust Polonius working group 2019-04-30, 05-07, 05-14 | as above | Apache-2.0 |
+| Fresh (`fresh/`) | OpenJS CPC 2025-02-18, 03-04, 03-18, 04-01 | as above | MIT |
+| | Rust language team 2022-10-25, 11-01 | as above | Apache-2.0 |
+| | Rust Polonius working group 2019-03-07, 04-23 | as above | Apache-2.0 |
+| Second development (`dev2/`) | OpenJS CPC 2024-12-10, 2025-01-07, 01-21, 02-04 | as above (`meetings/2024/` and `meetings/2025/`) | MIT |
+| | Rust language team 2022-09-27, 10-04, 10-11, 10-18 | as above | Apache-2.0 |
 
 The traits working group has only three minutes files, so the held-out set takes its three prose summaries from the Polonius working group instead. That rule was stated before reading them: the next working group in the same repository with the most minutes.
 
-Files are unmodified copies. [sources.tsv](sources.tsv), [sources-heldout.tsv](sources-heldout.tsv), [sources-recall.tsv](sources-recall.tsv) and [sources-fresh.tsv](sources-fresh.tsv) record each source path and commit, and `corpus/LICENSES/` holds the licences. Copyright remains with the original authors: the OpenJS Foundation and contributors, and the Rust project contributors.
+Files are unmodified copies. [sources.tsv](sources.tsv), [sources-heldout.tsv](sources-heldout.tsv), [sources-recall.tsv](sources-recall.tsv), [sources-fresh.tsv](sources-fresh.tsv) and [sources-dev2.tsv](sources-dev2.tsv) record each source path and commit, and `corpus/LICENSES/` holds the licences. Copyright remains with the original authors: the OpenJS Foundation and contributors, and the Rust project contributors.
 
 ## Method
 
